@@ -1,0 +1,12 @@
+import { randomUUID } from 'node:crypto';
+import type { DisputeCase, Evidence } from '../../../packages/contracts/src/index.ts';
+export function exampleCases(): DisputeCase[] {
+    const document = (name: string, text: string): Evidence => ({ id: randomUUID(), name, text, size: Buffer.byteLength(text), mimeType: 'text/plain', extractionStatus: 'ready', createdAt: '2026-11-08T09:00:00Z' });
+    const specs = [
+        { id: 'DEMO-1042', title: 'Handcrafted ceramic pour-over set', buyer: 'Alex Morgan', value: '84.00', docs: [document('order-1042.txt', 'SYNTHETIC DEMO RECORD\n2026-11-02 Order 1042 paid: USD 84.00 for a ceramic pour-over set.\nDelivery address: 14 Sample Lane, Example City.\nTransaction: DEMO-TXN-1042'), document('delivery-1042.txt', 'SYNTHETIC DEMO RECORD\n2026-11-03 Parcel dispatched. Tracking: TEST1042.\n2026-11-06 Status: Delivered. Tracking: TEST1042.\nDelivery address: 14 Sample Lane, Example City.')] },
+        { id: 'DEMO-1043', title: 'Linen weekend tote', buyer: 'Jamie Lee', value: '46.50', docs: [document('order-1043.txt', 'SYNTHETIC DEMO RECORD\n2026-11-04 Order 1043 paid: USD 46.50 for a linen tote.'), document('shipping-1043.txt', 'SYNTHETIC DEMO RECORD\n2026-11-05 Status: In transit. Tracking: TEST1043.\nNo delivery confirmation available.')] },
+        { id: 'DEMO-1044', title: 'Oak desk organiser', buyer: 'Sam Rivera', value: '112.00', docs: [document('order-1044.txt', 'SYNTHETIC DEMO RECORD\n2026-11-01 Order 1044 paid: USD 112.00 for an oak desk organiser.\nDelivery address: 22 Example Road, Example City.'), document('warehouse-1044.txt', 'SYNTHETIC DEMO RECORD\n2026-11-07 Status: Delivered. Tracking: TEST1044.'), document('carrier-1044.txt', 'SYNTHETIC DEMO RECORD\n2026-11-07 Status: Not delivered. Tracking: TEST1044. Recipient unavailable.')] },
+        { id: 'DEMO-1045', title: 'Woven cotton throw', buyer: 'Taylor Quinn', value: '68.00', docs: [] },
+    ];
+    return specs.map(s => ({ id: s.id, source: 'demo', title: s.title, buyerName: s.buyer, amount: { value: s.value, currency: 'USD' }, reason: 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED', status: 'WAITING_FOR_SELLER_RESPONSE', createdAt: '2026-11-08T12:00:00Z', dueAt: '2026-11-18T23:59:00Z', transactionId: `DEMO-TXN-${s.id.slice(-4)}`, buyerNote: 'I have not received my order. Please help resolve this.', canProvideEvidence: false, requestedEvidenceTypes: ['PROOF_OF_FULFILLMENT'], evidence: s.docs, evidenceVersion: 1, analysis: null, editedDraft: '', draftRevision: 0, submission: null }));
+}
