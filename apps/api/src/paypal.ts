@@ -88,7 +88,16 @@ export function normalizeDispute(raw: Raw, previous?: DisputeCase): DisputeCase 
     catch {
         allowed = false;
     }
-    return {
+    const next: DisputeCase = {
         id: raw.dispute_id, source: 'sandbox', title: tx.items?.[0]?.item_name || `PayPal dispute ${raw.dispute_id}`, buyerName: tx.buyer?.name || 'PayPal buyer', amount: { value: raw.dispute_amount?.value || '0', currency: raw.dispute_amount?.currency_code || 'USD' }, reason: raw.reason || 'UNKNOWN', status: raw.status || 'UNKNOWN', createdAt: raw.create_time || '', dueAt: raw.seller_response_due_date || null, transactionId: tx.seller_transaction_id || '', buyerNote: (raw.messages || []).filter((m: Raw) => m.posted_by === 'BUYER').map((m: Raw) => m.content).join('\n') || 'No buyer message returned by PayPal.', canProvideEvidence: allowed, requestedEvidenceTypes: (raw.evidences || []).filter((e: Raw) => e.source === 'REQUESTED_FROM_SELLER').map((e: Raw) => e.evidence_type), evidence: previous?.evidence || [], evidenceVersion: previous?.evidenceVersion || 0, analysis: previous?.analysis || null, editedDraft: previous?.editedDraft || '', draftRevision: previous?.draftRevision || 0, submission: previous?.submission || null,
     };
+    // A refreshed claim can change the context used by the AI and merchant.
+    if (previous && ['reason', 'buyerNote', 'transactionId', 'status'].some(key =>
+        previous[key as keyof DisputeCase] !== next[key as keyof DisputeCase])) {
+        next.analysis = null;
+        next.editedDraft = '';
+        next.evidenceVersion += 1;
+        next.draftRevision += 1;
+    }
+    return next;
 }

@@ -40,3 +40,7 @@ All requests target `https://api-m.sandbox.paypal.com`. Fresh detail/action chec
 - https://developer.paypal.com/disputes/set-up/
 
 **Validation status:** adapter and state/multipart behavior covered with stubbed transport tests. Live sandbox credentials and an actual end-to-end evidence acceptance are still required.
+
+## Read-only connection check
+
+After configuring sandbox credentials, run `npm run paypal:check`, then `npm run paypal:check -- YOUR-DISPUTE-ID`. These commands authenticate and read only; they never submit evidence. Output includes status/capability metadata, not buyer names, messages, IDs or tokens. This is a connectivity check, not full submission validation.

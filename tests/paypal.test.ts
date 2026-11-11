@@ -49,3 +49,19 @@ test('network ambiguity on write is explicitly marked uncertain', async () => {
     const p = new PayPal('a', 'b', fake);
     await assert.rejects(() => p.provideEvidence('PP-D-100', 'Draft', { approved: true, draftRevision: 1, evidenceVersion: 1, evidenceType: 'PROOF_OF_FULFILLMENT', carrier: 'Test', trackingNumber: 'TEST', evidenceIds: ['a'] }, []), (error: unknown) => error instanceof PayPalError && error.uncertain);
 });
+
+test('refresh invalidates drafts when buyer context changes but retains evidence and submission locks', () => {
+    const previous = normalizeDispute(raw);
+    previous.editedDraft = 'Old response';
+    previous.draftRevision = 2;
+    previous.submission = { state: 'unknown', at: '2026-11-11', message: 'Check PayPal', packageHash: 'abc' };
+    const unchanged = normalizeDispute(raw, previous);
+    assert.equal(unchanged.editedDraft, 'Old response');
+    const changed = normalizeDispute({ ...raw, messages: [{ posted_by: 'BUYER', content: 'New claim details' }] }, previous);
+    assert.equal(changed.editedDraft, '');
+    assert.equal(changed.analysis, null);
+    assert.equal(changed.evidenceVersion, 1);
+    assert.equal(changed.draftRevision, 3);
+    assert.deepEqual(changed.evidence, previous.evidence);
+    assert.equal(changed.submission?.state, 'unknown');
+});

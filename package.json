@@ -15,7 +15,11 @@
     "start": "node --import tsx apps/api/src/index.ts",
     "test": "node --import tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
-    "eval": "node --import tsx scripts/evaluate.ts"
+    "eval": "node --import tsx scripts/evaluate.ts",
+    "prestart": "node scripts/runtime-check.mjs",
+    "predev": "node scripts/runtime-check.mjs",
+    "doctor": "node scripts/runtime-check.mjs && node --import tsx scripts/doctor.ts",
+    "paypal:check": "node scripts/runtime-check.mjs && node --import tsx scripts/paypal-check.ts"
   },
   "dependencies": {
     "react": "19.2.8",

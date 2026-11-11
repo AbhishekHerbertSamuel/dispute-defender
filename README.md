@@ -99,3 +99,17 @@ This is a hackathon MVP, not a production multi-tenant service. No automatic ref
 See [SUBMISSION_CHECKLIST](docs/SUBMISSION_CHECKLIST.md). Deadline: 13 November 2026, 01:30 IST. The demo must show genuine PayPal + AI functionality before submitting. Keep the demo available and freeze linked submission materials according to organizer instructions.
 
 MIT licensed. No affiliation with or endorsement by PayPal is implied.
+
+## Integration checks
+
+Use Node 22.13+ (`nvm install && nvm use` reads `.nvmrc`). `npm start` and `npm run dev` now reject older Node versions with an actionable message.
+
+- `npm run doctor`: checks local configuration presence without printing secrets or contacting providers.
+- `npm run paypal:check`: verifies sandbox OAuth and dispute-list access without submitting evidence.
+- `npm run paypal:check -- PP-D-YOUR-ID`: checks a known dispute's status and submission eligibility without printing buyer details.
+
+For the built app, run `npm run build` then `npm start` and visit http://localhost:8787. For frontend development use `npm run dev` and the Vite URL. When configuring APP_ORIGIN, use the exact URL opened in your browser.
+
+Refreshing a PayPal claim with changed buyer context, transaction, reason or status clears the old analysis/draft and requires fresh review. Stored evidence and submission receipts remain intact.
+
+Real provider credentials and one live sandbox evidence acceptance are still required. No deployment or real-provider verification is implied by the automated tests.
