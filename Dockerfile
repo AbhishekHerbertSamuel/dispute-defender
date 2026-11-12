@@ -13,6 +13,7 @@ COPY --from=build --chown=node:node /app/package*.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/apps ./apps
 COPY --from=build --chown=node:node /app/packages ./packages
+COPY --from=build --chown=node:node /app/scripts ./scripts
 RUN mkdir -p /app/data && chown node:node /app/data
 USER node
 EXPOSE 8787

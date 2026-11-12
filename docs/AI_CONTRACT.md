@@ -48,20 +48,20 @@ Return the following object directly, not wrapped in `{data: ...}`:
 }
 ```
 
-Every timeline event, contradiction and draft paragraph needs one or more sources. Quotes must be exact source substrings after whitespace normalization. `page` is optional and is not automatically verified against PDF pages. Do not invent citations to PayPal or policy pages: this schema currently cites uploaded evidence only.
+Every timeline event, contradiction and draft paragraph needs one or more sources. Quotes must be exact source substrings after whitespace normalization. `page` is optional. When present, its quote must occur inside the corresponding `[Page N]` section. Page markers from vision extraction are model transcriptions, not independently verified physical-page provenance. Do not invent citations to PayPal or policy pages: this schema currently cites uploaded evidence only.
 
 The backend adds `provider`, `generatedAt` and `evidenceVersion`. It owns approval/versioning; do not add a submission action to the AI service. Empty evidence should produce missing-evidence flags and an empty draft, never fabricated details.
 
 ## Extraction service
 
-Optional `POST AI_EXTRACT_URL` receives `{name, mimeType, base64}`; return `{text}` with nonempty extracted UTF-8 text, maximum 60,000 characters. Use `AI_SERVICE_TOKEN` as bearer authentication if configured. The API does not send binary attachments to the analysis endpoint. Originals are retained on disk and sent only to the extraction service when configured.
+Optional `POST AI_EXTRACT_URL` receives `{name, mimeType, base64}`; return `{text}` with nonempty extracted UTF-8 text, maximum 60,000 characters. Use `AI_SERVICE_TOKEN` as bearer authentication if configured. The API does not send binary attachments to the analysis endpoint. Originals are retained on disk. When AI_EXTRACTION=vision, originals are sent to the configured model endpoint as PDF file or image inputs.
 
 Timeout is 60 seconds. Exceptions and invalid JSON become visible errors; the app never quietly falls back to demo and calls it AI. Keep provider credentials on the server. Treat document instructions as untrusted content. The generic LLM adapter requires chat-completions and JSON-object response format support.
 
-## Current limitations / extension space
+## Limitations
 
 - Literal quote validation is not semantic entailment validation.
 - Tracking authenticity and delivery-address matching need explicit reasoning/verification.
-- Page-level extraction provenance can be added through a coordinated contract change.
+- Verify model-transcribed text and page numbering against originals.
 - The baseline regex dates/statuses are scaffolding, not a production extractor.
 - No model was evaluated with live credentials during initial setup.

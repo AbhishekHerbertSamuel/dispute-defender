@@ -113,3 +113,7 @@ For the built app, run `npm run build` then `npm start` and visit http://localho
 Refreshing a PayPal claim with changed buyer context, transaction, reason or status clears the old analysis/draft and requires fresh review. Stored evidence and submission receipts remain intact.
 
 Real provider credentials and one live sandbox evidence acceptance are still required. No deployment or real-provider verification is implied by the automated tests.
+
+## Built-in AI workflow
+
+The AI stream is implemented: vision PDF/image transcription, grounded drafting, a separate model review pass, one bounded repair attempt, and source/page validation. Follow [AI_SETUP.md](docs/AI_SETUP.md) to enable it. No separate Python service is required. `npm run eval:ai` exercises six synthetic cases against your configured real provider; mock tests and demo scores are not real-model accuracy.

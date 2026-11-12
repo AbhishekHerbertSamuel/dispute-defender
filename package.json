@@ -19,7 +19,8 @@
     "prestart": "node scripts/runtime-check.mjs",
     "predev": "node scripts/runtime-check.mjs",
     "doctor": "node scripts/runtime-check.mjs && node --import tsx scripts/doctor.ts",
-    "paypal:check": "node scripts/runtime-check.mjs && node --import tsx scripts/paypal-check.ts"
+    "paypal:check": "node scripts/runtime-check.mjs && node --import tsx scripts/paypal-check.ts",
+    "eval:ai": "node scripts/runtime-check.mjs && node --import tsx scripts/evaluate-ai.ts"
   },
   "dependencies": {
     "react": "19.2.8",

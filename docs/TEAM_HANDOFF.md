@@ -2,7 +2,11 @@
 
 The application foundation is implemented. Do not wait for a separate frontend repo.
 
-## Waseem — AI stream
+## AI stream — implementation now included
+
+The built-in LLM workflow, vision extraction, review pass, tests and evaluation harness are implemented. See `docs/AI_SETUP.md`. Remaining work is live model validation and quality review; the tasks below remain optional extension guidance.
+
+### Extension guidance
 
 1. Branch `feature/ai-workflow` from `main`.
 2. Read `packages/contracts/src/index.ts` and `docs/AI_CONTRACT.md`.

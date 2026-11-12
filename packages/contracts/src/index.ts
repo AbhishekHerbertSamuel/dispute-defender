@@ -87,6 +87,13 @@ export function validateGrounding(content: AnalysisContent, evidence: Evidence[]
         const source = evidence.find(e => e.id === ref.evidenceId);
         if (!source || !normalized(ref.quote) || !normalized(source.text).includes(normalized(ref.quote)))
             throw new Error('Analysis contains an unknown source or a quote absent from its source.');
+        if (ref.page !== undefined) {
+            const marker = `[Page ${ref.page}]`;
+            const start = source.text.indexOf(marker);
+            const end = start < 0 ? -1 : source.text.indexOf('[Page ', start + marker.length);
+            if (start < 0 || !normalized(source.text.slice(start + marker.length, end < 0 ? undefined : end)).includes(normalized(ref.quote)))
+                throw new Error('Analysis cites a page that does not contain its quote.');
+        }
     }
     return content;
 }
