@@ -8,6 +8,8 @@
 - Live `gpt-4.1-mini` review completed six synthetic development cases without provider/schema errors in the final run. Five cases used model calls; the empty case correctly abstained before any call.
 - Live PDF transcription passed a one-page synthetic smoke test, preserving tracking ID, in-transit status and amount. This is not an OCR benchmark.
 
+- Actual sandbox dispute `PP-R-AGU-10200241` was created, retrieved through merchant credentials and imported into the app. Browser displayed the API case and completed a live AI review of a clearly labelled synthetic in-transit record. The model identified that the record was synthetic and did not establish actual delivery.
+
 ## Live review results
 
 The final run passed 26 of 29 keyword/structural checks. The evaluator deliberately exits nonzero when any check fails. These are development fixtures used during iteration, not an independent test set or an accuracy estimate.
@@ -20,9 +22,9 @@ The final run passed 26 of 29 keyword/structural checks. The evaluator deliberat
 
 ## Still unverified / pending
 
-- Creation and import of an actual sandbox dispute, followed by PayPal acceptance of evidence. The payment exists, but opening the dispute form was interrupted; subsequent browser retry reached an expired login session.
+- PayPal acceptance of evidence remains unverified: case PP-R-AGU-10200241 is UNDER_REVIEW and does not expose permission to provide proof of fulfillment.
 - Live image extraction and broader scanned/multipage PDF evaluation.
-- Final browser walkthrough against the restarted app and configured real provider.
+- Remaining browser checks are tracked in QA.md.
 - Hosted judge access or a verified judge setup, public demo video, team/form completion and final Devpost submission.
 
 Keep synthetic examples clearly labelled. Do not claim production readiness, dispute win rate, perfect grounding or complete end-to-end PayPal acceptance from these checks.

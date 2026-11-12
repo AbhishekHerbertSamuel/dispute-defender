@@ -4,7 +4,7 @@ The application foundation is implemented. Do not wait for a separate frontend r
 
 ## AI stream — implementation now included
 
-The built-in LLM workflow, vision extraction, review pass, tests and evaluation harness are implemented. See `docs/AI_SETUP.md`. Remaining work is live model validation and quality review; the tasks below remain optional extension guidance.
+The built-in LLM workflow, vision extraction, review pass, tests and evaluation harness are implemented. See `docs/AI_SETUP.md`. Live model validation is recorded in `docs/VALIDATION.md`; remaining work is broader independent quality review; the tasks below remain optional extension guidance.
 
 ### Extension guidance
 
@@ -19,20 +19,17 @@ The built-in LLM workflow, vision extraction, review pass, tests and evaluation 
 
 The backend already stores originals, versions analysis, validates output schemas and checks literal source quotes. You do not need to implement storage, PayPal or the UI.
 
-## Princess — product / QA / demo
+## Product stream — completed in the shared repository
 
-1. Branch `docs/merchant-journey` from `main`.
-2. Refine `docs/PRODUCT.md`; preserve the narrow MVP scope.
-3. Run the app and fill the results in `docs/QA.md`.
-4. Improve `docs/DEMO.md` and the Devpost description after seeing what really works.
-5. Flag confusing labels, missing errors or misleading claims in a PR/issue.
+Merchant journey, scope, screen requirements, warning priorities and acceptance criteria are finalized in `docs/PRODUCT.md`. UI now explains unavailable PayPal submission, offers case refresh, counts contradictions as attention items, disables review without readable evidence and supports dialog keyboard navigation. Manual observations and remaining checks are recorded honestly in `docs/QA.md`.
 
-## Abhishek — integration / release
+## Integration / release status
 
-- Add PayPal sandbox credentials locally and validate one real sandbox dispute.
-- Share a **sanitised** actual API response with Waseem. `fixtures/paypal-dispute.example.json` is synthetic, not an observed response.
-- Integrate Waseem's provider, validate one end-to-end case and deploy with persistent disk.
-- Record genuine PayPal/AI actions, complete submission and freeze the final version.
+- Credentials configured privately; live AI review and PDF extraction verified.
+- Actual sandbox dispute `PP-R-AGU-10200241` created and imported. Live AI review ran against a clearly labelled synthetic shipping document.
+- PayPal currently reports UNDER_REVIEW and does not permit proof-of-fulfillment submission. Evidence acceptance remains unverified.
+- Local configured app runs at port 8788 in this session; the older demo process remains on 8787.
+- Public video, judge access and final Devpost submission still require completion. See `docs/SUBMISSION_CHECKLIST.md`.
 
 ## Git workflow
 
