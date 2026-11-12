@@ -65,3 +65,18 @@ test('refresh invalidates drafts when buyer context changes but retains evidence
     assert.deepEqual(changed.evidence, previous.evidence);
     assert.equal(changed.submission?.state, 'unknown');
 });
+
+test('inquiry messages require current action link and use the sandbox JSON endpoint', async () => {
+    let allow = true, writes = 0;
+    const request: typeof fetch = async (url, init) => {
+        if (String(url).endsWith('/token')) return Response.json({ access_token: 'test', expires_in: 3600 });
+        if (String(url).endsWith('/send-message')) { writes++; assert.deepEqual(JSON.parse(String(init?.body)), { message: 'Sandbox test' }); return Response.json({}); }
+        return Response.json({ ...raw, dispute_life_cycle_stage: 'INQUIRY', links: allow ? [{ rel: 'send_message', method: 'POST' }] : [] });
+    };
+    const p = new PayPal('test', 'test', request);
+    await p.sendMessage(raw.dispute_id, 'Sandbox test');
+    allow = false;
+    await assert.rejects(() => p.sendMessage(raw.dispute_id, 'Sandbox test'));
+    assert.equal(writes, 1);
+    assert.doesNotThrow(() => assertSubmittable({ ...raw, links: [{ rel: 'provide_evidence', method: 'POST' }] }));
+});

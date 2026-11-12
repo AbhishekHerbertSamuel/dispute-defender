@@ -52,3 +52,7 @@ A test merchant receives a sandbox dispute, imports it, uploads a clearly labell
 ## Next release
 
 Independent annotated evaluation, stronger semantic grounding, representative scanned-document testing, multi-merchant authentication and operational reconciliation. These are outside the hackathon MVP, not hidden completed features.
+
+## Inquiry reply flow
+
+When PayPal exposes a send_message action in the INQUIRY stage, Response offers a separate text-only buyer reply. Save and review the response, approve the inquiry message, then send. Tracking and attachments are not required for this action. Manual replies are supported without an AI call. The app rechecks PayPal permission before writing, records acceptance separately from evidence submission and blocks duplicate text or retries after an uncertain result.

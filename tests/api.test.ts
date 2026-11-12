@@ -151,3 +151,22 @@ test('uncertain submission stays locked rather than automatically retrying', asy
         await app.close();
     }
 });
+
+test('inquiry send requires approval/current draft and blocks duplicates and uncertain retries', async () => {
+    let writes = 0, uncertain = false;
+    const paypal = { sendMessage: async () => { writes++; if (uncertain) throw new PayPalError('Timeout', 502, undefined, true); return { data: {}, debugId: 'test' }; } } as unknown as PayPal;
+    const app = await setup({ APP_MODE: 'sandbox' }, { paypal });
+    try {
+        const c = exampleCases()[0]; c.source = 'sandbox'; c.canSendMessage = true; c.editedDraft = 'Synthetic sandbox test'; c.draftRevision = 2; app.store.put(c);
+        const path = `/cases/${c.id}/message`;
+        assert.equal((await app.call(path, 'POST', { approved: false, draftRevision: 2 })).status, 400);
+        assert.equal((await app.call(path, 'POST', { approved: true, draftRevision: 1 })).status, 409);
+        assert.equal((await app.call(path, 'POST', { approved: true, draftRevision: 2 })).status, 200);
+        assert.equal((await app.call(path, 'POST', { approved: true, draftRevision: 2 })).status, 409);
+        const next = app.store.get(c.id)!; next.editedDraft = 'Another sandbox test'; next.draftRevision++; app.store.put(next); uncertain = true;
+        assert.equal((await app.call(path, 'POST', { approved: true, draftRevision: 3 })).status, 502);
+        assert.equal(app.store.get(c.id)?.messageReceipt?.state, 'unknown');
+        assert.equal((await app.call(path, 'POST', { approved: true, draftRevision: 3 })).status, 409);
+        assert.equal(writes, 2);
+    } finally { await app.close(); }
+});

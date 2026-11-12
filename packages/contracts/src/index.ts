@@ -50,6 +50,8 @@ export type DisputeCase = {
     transactionId: string;
     buyerNote: string;
     canProvideEvidence: boolean;
+    canSendMessage?: boolean;
+    messageReceipt?: Submission | null;
     requestedEvidenceTypes: string[];
     evidence: Evidence[];
     evidenceVersion: number;

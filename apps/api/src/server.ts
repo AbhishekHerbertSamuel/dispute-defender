@@ -49,6 +49,7 @@ export function createApp(env: Env = process.env, dependencies: {
     const directory = resolve(env.DATA_DIR || './data');
     const store = new Store(directory, mode);
     for (const c of store.list()) {
+        if (c.messageReceipt?.state === 'pending') { c.messageReceipt.state = 'unknown'; c.messageReceipt.message = 'Server restarted during message send. Check PayPal before retrying.'; store.put(c); }
         if (c.submission?.state === 'pending') {
             c.submission.state = 'unknown';
             c.submission.message = 'Server restarted during submission. Check the PayPal case before retrying; acceptance is unknown.';
@@ -74,7 +75,7 @@ export function createApp(env: Env = process.env, dependencies: {
     };
     const getCase = (id: string) => { const c = store.get(id); if (!c)
         throw new HttpError(404, 'Case not found.'); return c; };
-    const notSubmitting = (c: DisputeCase) => { if (locks.has(c.id) || ['pending', 'unknown', 'succeeded'].includes(c.submission?.state || ''))
+    const notSubmitting = (c: DisputeCase) => { if (locks.has(c.id) || ['pending', 'unknown'].includes(c.messageReceipt?.state || '') || ['pending', 'unknown', 'succeeded'].includes(c.submission?.state || ''))
         throw new HttpError(409, 'This case is locked after submission or while an operation is running. Review its receipt before proceeding.'); };
     const bytes = async (c: DisputeCase, e: Evidence) => c.source === 'demo' && e.mimeType === 'text/plain' ? Buffer.from(e.text) : readFile(resolve(directory, 'uploads', e.id));
     const handler = async (req: IncomingMessage, res: ServerResponse) => {
@@ -245,6 +246,31 @@ export function createApp(env: Env = process.env, dependencies: {
                     store.put(latest);
                     store.audit(c.id, 'Merchant saved response draft.');
                     return json(res, 200, latest);
+                }
+                if (action === 'message' && method === 'POST') {
+                    notSubmitting(c);
+                    if (mode !== 'sandbox' || c.source !== 'sandbox') throw new HttpError(409, 'Only sandbox inquiries can receive messages.');
+                    const approval = z.object({ approved: z.literal(true), draftRevision: z.number().int().nonnegative() }).parse(await body(req));
+                    const latest = getCase(c.id);
+                    notSubmitting(latest);
+                    if (approval.draftRevision !== latest.draftRevision) throw new HttpError(409, 'Draft changed. Save and review the current draft.');
+                    if (!latest.canSendMessage) throw new HttpError(409, 'Refresh PayPal; inquiry messaging is unavailable.');
+                    if (!latest.editedDraft.trim() || latest.editedDraft.length > 2000) throw new HttpError(400, 'Message must contain 1–2000 characters.');
+                    const hash = createHash('sha256').update(latest.editedDraft).digest('hex');
+                    if (latest.messageReceipt?.state === 'succeeded' && latest.messageReceipt.packageHash === hash) throw new HttpError(409, 'This message was already sent.');
+                    locks.add(c.id);
+                    latest.messageReceipt = { state: 'pending', at: new Date().toISOString(), message: 'Sending approved inquiry message.', packageHash: hash };
+                    store.put(latest);
+                    store.audit(c.id, 'Merchant approved inquiry message; sandbox send started.');
+                    try {
+                        const result = await paypal.sendMessage(c.id, latest.editedDraft);
+                        latest.messageReceipt = { state: 'succeeded', at: new Date().toISOString(), message: 'PayPal sandbox accepted the inquiry message. No evidence attachments were sent.', debugId: result.debugId, packageHash: hash };
+                        store.put(latest); store.audit(c.id, 'PayPal sandbox accepted inquiry message.');
+                        return json(res, 200, latest);
+                    } catch (error) {
+                        latest.messageReceipt = { state: error instanceof PayPalError && error.uncertain ? 'unknown' : 'failed', at: new Date().toISOString(), message: error instanceof PayPalError ? error.message : 'Message failed before acceptance could be confirmed.', packageHash: hash };
+                        store.put(latest); store.audit(c.id, `Inquiry message ${latest.messageReceipt.state}.`); throw error;
+                    } finally { locks.delete(c.id); }
                 }
                 if (action === 'submit' && method === 'POST') {
                     notSubmitting(c);

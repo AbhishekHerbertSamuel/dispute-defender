@@ -55,6 +55,12 @@ export class PayPal {
             throw new PayPalError('Invalid dispute ID.', 400);
         return (await this.call(`/v1/customer/disputes/${encodeURIComponent(id)}`)).data;
     }
+    async sendMessage(id: string, message: string) {
+        const raw = await this.detail(id);
+        if (!canMessage(raw)) throw new PayPalError('PayPal does not currently allow inquiry messages for this case.', 409);
+        if (!message.trim() || message.length > 2000) throw new PayPalError('Message must contain 1–2000 characters.', 400);
+        return this.call(`/v1/customer/disputes/${encodeURIComponent(id)}/send-message`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+    }
     async provideEvidence(id: string, draft: string, approval: SubmitInput, files: {
         name: string;
         mimeType: string;
@@ -70,10 +76,11 @@ export class PayPal {
         return this.call(`/v1/customer/disputes/${encodeURIComponent(id)}/provide-evidence`, { method: 'POST', body: form });
     }
 }
+export function canMessage(raw: Raw): boolean { return raw.dispute_life_cycle_stage === 'INQUIRY' && !!raw.links?.some((l: Raw) => ['send_message', 'send-message'].includes(l.rel) && l.method === 'POST'); }
 export function assertSubmittable(raw: Raw) {
     if (raw.reason !== 'MERCHANDISE_OR_SERVICE_NOT_RECEIVED')
         throw new PayPalError('This MVP supports item-not-received disputes only.', 409);
-    if (raw.status !== 'WAITING_FOR_SELLER_RESPONSE' || !raw.links?.some((l: Raw) => l.rel === 'provide-evidence' && l.method === 'POST'))
+    if (raw.status !== 'WAITING_FOR_SELLER_RESPONSE' || !raw.links?.some((l: Raw) => ['provide-evidence', 'provide_evidence'].includes(l.rel) && l.method === 'POST'))
         throw new PayPalError('PayPal does not currently allow this seller to provide evidence.', 409);
     const requested = (raw.evidences || []).filter((e: Raw) => e.source === 'REQUESTED_FROM_SELLER').map((e: Raw) => e.evidence_type);
     if (!requested.includes('PROOF_OF_FULFILLMENT'))
@@ -89,7 +96,7 @@ export function normalizeDispute(raw: Raw, previous?: DisputeCase): DisputeCase 
         allowed = false;
     }
     const next: DisputeCase = {
-        id: raw.dispute_id, source: 'sandbox', title: tx.items?.[0]?.item_name || `PayPal dispute ${raw.dispute_id}`, buyerName: tx.buyer?.name || 'PayPal buyer', amount: { value: raw.dispute_amount?.value || '0', currency: raw.dispute_amount?.currency_code || 'USD' }, reason: raw.reason || 'UNKNOWN', status: raw.status || 'UNKNOWN', createdAt: raw.create_time || '', dueAt: raw.seller_response_due_date || null, transactionId: tx.seller_transaction_id || '', buyerNote: (raw.messages || []).filter((m: Raw) => m.posted_by === 'BUYER').map((m: Raw) => m.content).join('\n') || 'No buyer message returned by PayPal.', canProvideEvidence: allowed, requestedEvidenceTypes: (raw.evidences || []).filter((e: Raw) => e.source === 'REQUESTED_FROM_SELLER').map((e: Raw) => e.evidence_type), evidence: previous?.evidence || [], evidenceVersion: previous?.evidenceVersion || 0, analysis: previous?.analysis || null, editedDraft: previous?.editedDraft || '', draftRevision: previous?.draftRevision || 0, submission: previous?.submission || null,
+        id: raw.dispute_id, source: 'sandbox', title: tx.items?.[0]?.item_name || `PayPal dispute ${raw.dispute_id}`, buyerName: tx.buyer?.name || 'PayPal buyer', amount: { value: raw.dispute_amount?.value || '0', currency: raw.dispute_amount?.currency_code || 'USD' }, reason: raw.reason || 'UNKNOWN', status: raw.status || 'UNKNOWN', createdAt: raw.create_time || '', dueAt: raw.seller_response_due_date || null, transactionId: tx.seller_transaction_id || '', buyerNote: (raw.messages || []).filter((m: Raw) => m.posted_by === 'BUYER').map((m: Raw) => m.content).join('\n') || 'No buyer message returned by PayPal.', canProvideEvidence: allowed, canSendMessage: canMessage(raw), messageReceipt: previous?.messageReceipt || null, requestedEvidenceTypes: (raw.evidences || []).filter((e: Raw) => e.source === 'REQUESTED_FROM_SELLER').map((e: Raw) => e.evidence_type), evidence: previous?.evidence || [], evidenceVersion: previous?.evidenceVersion || 0, analysis: previous?.analysis || null, editedDraft: previous?.editedDraft || '', draftRevision: previous?.draftRevision || 0, submission: previous?.submission || null,
     };
     // A refreshed claim can change the context used by the AI and merchant.
     if (previous && ['reason', 'buyerNote', 'transactionId', 'status'].some(key =>

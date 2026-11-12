@@ -21,3 +21,7 @@ Use the configured local app at http://localhost:8788 during this session. The o
 - Keep the video under three minutes, in English, without unlicensed music.
 - Upload to public YouTube and verify the link in a signed-out browser.
 - Add video link and repository URL to the final submission. A script is not a recorded video or a submitted entry.
+
+## Newly added inquiry reply
+
+The Response screen now separates buyer inquiry messaging from proof-of-fulfillment submission. Refresh PayPal to load current action permissions. If available, type or edit a clearly labelled sandbox reply, save, explicitly approve, and send once. Do not rerun AI for this step. Only describe this action as live-verified after seeing an accepted receipt and the corresponding message in PayPal; current automated tests alone do not establish live acceptance.

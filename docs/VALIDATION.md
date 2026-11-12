@@ -28,3 +28,13 @@ The final run passed 26 of 29 keyword/structural checks. The evaluator deliberat
 - Hosted judge access or a verified judge setup, public demo video, team/form completion and final Devpost submission.
 
 Keep synthetic examples clearly labelled. Do not claim production readiness, dispute win rate, perfect grounding or complete end-to-end PayPal acceptance from these checks.
+
+## Inquiry messaging implementation
+
+Added text-only inquiry replies through `/send-message`, with explicit approval, saved-draft version checks, a current PayPal action check, duplicate protection, persisted receipts and unknown-result locking. Action normalization accepts PayPal's observed underscore names as well as hyphenated names.
+
+Read-only live API check returned INQUIRY / WAITING_FOR_BUYER_RESPONSE and a POST send_message action after the merchant's website reply. All 29 tests passed in both in-process and real HTTP modes; typecheck and build passed. Tests use mocked PayPal responses and make no paid AI calls.
+
+Live sending from the app remains unverified: a subsequent tool operation reported PayPal network access blocked by environment policy. No new message was sent by this implementation. The earlier merchant reply was sent through PayPal's website by the user.
+
+API reference: https://developer.paypal.com/api/disputes/
