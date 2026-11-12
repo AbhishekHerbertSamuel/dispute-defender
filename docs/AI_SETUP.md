@@ -27,13 +27,13 @@ The endpoint is configurable. It must support Chat Completions JSON-object outpu
 - `npm run eval`: existing four-case rule baseline regression suite.
 - `npm run eval:ai`: six synthetic cases using actual provider calls; prints outputs, timings and heuristic checks for manual review. This can incur API charges. It refuses demo mode. Cases cover delivery, in-transit shipment, conflicting same-time status, normal status progression, prompt injection and absent evidence.
 
-The live evaluation is NOT yet run: no credentials were available in the build session. Do not present mock-test counts as model accuracy. The evaluation does not measure OCR accuracy; compare representative scanned documents against hand-checked transcripts separately.
+Live validation has now been run with gpt-4.1-mini; see docs/VALIDATION.md for results and limitations. Do not present mock-test counts as model accuracy. The evaluation does not measure OCR accuracy; compare representative scanned documents against hand-checked transcripts separately.
 
 ## Bounds and behavior
 
 - Maximum 5 MB per original enforced by upload API; vision output max 30 pages / 60,000 characters.
 - Analysis max 120,000 evidence characters; oversized cases fail rather than silently truncate.
-- 60 seconds per model call; two review calls normally, at most three with repair. Upload extraction is one call per document.
+- 60 seconds per model call; two review calls normally, at most four with repair. Upload extraction is one call per document.
 - No automatic demo fallback, PayPal actions or fabricated success. Provider refusals/errors remain visible.
 - API credentials are never returned to the browser. Uploaded document content is sent to your configured provider when extraction/review is enabled.
 
