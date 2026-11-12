@@ -3,7 +3,12 @@ import { createRoot } from 'react-dom/client';
 import type { AppConfig, DisputeCase, Evidence, SourceRef } from '../../../packages/contracts/src/index.ts';
 import './style.css';
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const r = await fetch(`/api${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+    let r: Response;
+    try {
+        r = await fetch(`/api${path}`, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+    } catch {
+        throw new Error('Cannot reach the workspace server. Start the app in your Terminal, keep that window open, then reload this page. If this happened while sending a message or evidence, check PayPal before retrying: the result may be unknown.');
+    }
     const data = await r.json();
     if (!r.ok)
         throw new Error(data.error || 'Request failed.');
