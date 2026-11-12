@@ -2,7 +2,7 @@
 
 A single-merchant workspace that turns scattered records into a traceable, editable PayPal dispute response. Built for the PayPal AI Hackathon 2026.
 
-**Current status:** application and integration foundation, not a verified live PayPal deployment. Runs without credentials in clearly labelled demo mode. Real AI and sandbox calls require your server credentials. The rule-based demo is not an AI model and alone does not satisfy the hackathon's AI requirement.
+**Current status:** locally runnable hackathon MVP. Live AI review and PayPal sandbox case import were tested; an app-originated inquiry reply was confirmed in PayPal’s Resolution Centre. Formal delivery-evidence submission remains unverified. Runs without credentials in clearly labelled demo mode. Real AI and sandbox calls require your server credentials. The rule-based demo is not an AI model and alone does not satisfy the hackathon's AI requirement.
 
 ## Start in five minutes
 
@@ -30,12 +30,12 @@ Open http://localhost:8787. PowerShell users should set `$env:APP_ORIGIN="http:/
 - Responsive dispute inbox, search and review filters.
 - Persistent SQLite case records and originals on disk, with demo/sandbox separation.
 - Upload TXT/PDF/PNG/JPEG (5 MB each, ten documents per case).
-- UTF-8 text extraction now; PDF/OCR plug-in point and optional HTTP extraction service.
+- UTF-8 text extraction and optional model-based PDF/image transcription; a synthetic PDF extraction was tested live. Broad OCR accuracy has not been established.
 - Timeline, evidence gaps, potential contradictions, source quote inspection.
 - Editable saved drafts, review-package JSON export, original-file download.
 - AI adapters: explicit demo baseline, external team service, or chat-completions-compatible LLM.
 - Source IDs and quoted text checked server-side. This does **not** verify semantic entailment.
-- Sandbox OAuth, list/import disputes, fresh action/state checks, multipart evidence submission.
+- Sandbox OAuth, list/import disputes, approved inquiry messaging, and a separate case-gated multipart evidence-submission implementation.
 - Explicit merchant approval and version checks; duplicate/uncertain writes blocked.
 - Shared-password access for hosted demos, HttpOnly sessions, origin/host checks and upload validation.
 
@@ -59,16 +59,16 @@ See `.env.example` for all variables. Never place API keys in frontend variables
 
 ### PayPal
 
-Set `APP_MODE=sandbox`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`, then restart. Use Connections → import an existing sandbox dispute or Sync PayPal. There is intentionally **no production-payment mode**. Only item-not-received disputes requesting proof of fulfillment are supported for submission.
+Set `APP_MODE=sandbox`, `PAYPAL_CLIENT_ID`, and `PAYPAL_CLIENT_SECRET`, then restart. Use Connections → import an existing sandbox dispute or Sync PayPal. There is intentionally **no production-payment mode**. Inquiry replies require an eligible case and a current messaging action. Formal evidence submission supports only the implemented proof-of-fulfillment workflow when eligible.
 
-Read [PAYPAL_SETUP](docs/PAYPAL_SETUP.md). Sandbox-account permissions and a successful actual evidence submission remain to be validated by your team; automated tests use a fake PayPal transport.
+Read [PAYPAL_SETUP](docs/PAYPAL_SETUP.md). Sandbox import and inquiry messaging were verified live. Formal evidence submission remains unverified; automated tests use a fake PayPal transport.
 
 ### AI
 
 - `AI_PROVIDER=demo`: deterministic development baseline; no model/network call.
 - `AI_PROVIDER=service`: POST the typed analysis input to `AI_SERVICE_URL`; optional bearer `AI_SERVICE_TOKEN`.
-- `AI_PROVIDER=llm`: set `AI_CHAT_COMPLETIONS_URL`, `AI_API_KEY`, `AI_MODEL`. Endpoint must implement chat completions and JSON-object response format. No provider was exercised with real credentials during setup.
-- Optional `AI_EXTRACT_URL` receives `{name,mimeType,base64}` and returns `{text}` for PDF/image uploads. Without this, originals remain stored with `needs-extraction`, and you can add TXT transcripts for review.
+- `AI_PROVIDER=llm`: set `AI_CHAT_COMPLETIONS_URL`, `AI_API_KEY`, `AI_MODEL`. Endpoint must implement chat completions and JSON-object response format. GPT-4.1 mini was exercised with real credentials on synthetic evidence; generated output can still fail source validation.
+- Optional `AI_EXTRACT_URL` receives `{name,mimeType,base64}` and returns `{text}` for PDF/image uploads. Alternatively set `AI_EXTRACTION=vision` with the configured model; without either extraction option, originals remain stored with `needs-extraction`, and TXT transcripts can be added for review.
 
 Uploaded evidence is transmitted only to the configured AI/extraction services when those operations run. Use synthetic/test records for the hackathon.
 
@@ -92,7 +92,7 @@ Do not put this Node/SQLite application on a static-only host or an ephemeral se
 
 ## Known boundaries
 
-This is a hackathon MVP, not a production multi-tenant service. No automatic refunds, carrier verification, win probabilities, policy adjudication, user account management or background webhooks. The first sync imports up to 50 cases; import further cases individually. A successful evidence response means PayPal accepted the package, **not** that the dispute was won. Unknown/pending submissions stay locked for manual reconciliation in PayPal; do not blindly reset/retry them. PDF/OCR and independent semantic evaluation are reserved for the AI stream.
+This is a hackathon MVP, not a production multi-tenant service. No automatic refunds, carrier verification, win probabilities, policy adjudication, user account management or background webhooks. The first sync imports up to 50 cases; import further cases individually. A successful evidence response means PayPal accepted the package, **not** that the dispute was won. Unknown/pending submissions stay locked for manual reconciliation in PayPal; do not blindly reset/retry them. Broad PDF/image extraction evaluation and independent semantic evaluation remain outstanding.
 
 ## Submission
 
@@ -112,7 +112,7 @@ For the built app, run `npm run build` then `npm start` and visit http://localho
 
 Refreshing a PayPal claim with changed buyer context, transaction, reason or status clears the old analysis/draft and requires fresh review. Stored evidence and submission receipts remain intact.
 
-Real provider credentials and one live sandbox evidence acceptance are still required. No deployment or real-provider verification is implied by the automated tests.
+Full integration testing requires server-side AI and PayPal sandbox credentials. No hosted deployment is provided. Automated tests alone do not establish live-provider success; the separately observed live result is inquiry-message acceptance, not evidence-attachment acceptance.
 
 ## Built-in AI workflow
 

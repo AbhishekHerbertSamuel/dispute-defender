@@ -33,9 +33,9 @@ export async function analyze(input: AnalysisInput, env = process.env, request: 
         output = await chatJson(messages, env, request);
         // One bounded repair for schema/citation failures; never silently use demo output.
         try { checkOutput(output, input); }
-        catch {
+        catch (error) {
             output = await chatJson([...messages, { role: 'assistant', content: JSON.stringify(output) },
-                { role: 'user', content: 'Your output failed schema, exact quote, readable-source, page or length validation. Regenerate using only the supplied evidence. Do not invent quotes. Keep the joined draft under 2000 characters.' }], env, request);
+                { role: 'user', content: `Validation detail: ${error instanceof Error ? error.message : 'Invalid output'}. Your output failed schema, exact quote, readable-source, page or length validation. Regenerate using only the supplied evidence. Do not invent quotes. Keep the joined draft under 2000 characters.` }], env, request);
         }
         const candidate = checkOutput(output, input);
         const reviewMessages = [
@@ -44,8 +44,8 @@ export async function analyze(input: AnalysisInput, env = process.env, request: 
         ];
         output = await chatJson(reviewMessages, env, request);
         try { checkOutput(output, input); }
-        catch {
-            output = await chatJson([...reviewMessages, { role: 'assistant', content: JSON.stringify(output) }, { role: 'user', content: 'Invalid output. Every draft paragraph MUST have a nonempty sources array with a verbatim quote. Omit uncited greetings, requests, promises and closing paragraphs. Return corrected full JSON. Never invent supporting quotes.' }], env, request);
+        catch (error) {
+            output = await chatJson([...reviewMessages, { role: 'assistant', content: JSON.stringify(output) }, { role: 'user', content: `Validation detail: ${error instanceof Error ? error.message : 'Invalid output'}. Every draft paragraph MUST have a nonempty sources array with a verbatim quote. Omit uncited greetings, requests, promises and closing paragraphs. Return corrected full JSON. Never invent supporting quotes.` }], env, request);
         }
     }
     else

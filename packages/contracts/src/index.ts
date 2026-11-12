@@ -84,11 +84,11 @@ export type SubmitInput = z.infer<typeof SubmitSchema>;
 /** Quotes must actually occur in the cited evidence. Semantic entailment still needs review. */
 export function validateGrounding(content: AnalysisContent, evidence: Evidence[]): AnalysisContent {
     const normalized = (s: string) => s.replace(/\s+/g, ' ').trim();
-    const refs = [...content.timeline, ...content.contradictions, ...content.draft].flatMap(x => x.sources);
-    for (const ref of refs) {
+    const refs = (['timeline', 'contradictions', 'draft'] as const).flatMap(section => content[section].flatMap((item, i) => item.sources.map((ref, j) => ({ ref, path: `${section}[${i}].sources[${j}]` }))));
+    for (const { ref, path } of refs) {
         const source = evidence.find(e => e.id === ref.evidenceId);
         if (!source || !normalized(ref.quote) || !normalized(source.text).includes(normalized(ref.quote)))
-            throw new Error('Analysis contains an unknown source or a quote absent from its source.');
+            throw new Error(`Analysis contains an unknown source or a quote absent from its source. Invalid reference at ${path}: ${source ? 'quote must be copied verbatim from the evidence text, without paraphrasing or joining separate excerpts' : 'evidenceId must exactly match a supplied readable document ID'}.`);
         if (ref.page !== undefined) {
             const marker = `[Page ${ref.page}]`;
             const start = source.text.indexOf(marker);
